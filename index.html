@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walk, talk and maybe some fika...</title>
+  <style>
+    body { font-family: sans-serif; background: #f3f3f3; padding: 20px; }
+    .card { background: white; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .step.active { display: block; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 1em; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    h1, h2 { margin-top: 0; }
+    .share { margin-top: 30px; text-align: center; font-size: 0.9em; color: #333; }
+    .share a { color: #4CAF50; text-decoration: none; }
+    .info { margin-top: 20px; font-size: 0.95em; color: #333; }
+    .warning { color: #b00020; font-weight: bold; margin-top: 10px; }
+    #placeHint { margin-top: 20px;}
+    #placeButton { float: right}
+    .icon { display: inline-block; margin-right: 8px; }
+    #gameRules { list-style-type: none; padding: 1em; }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>Walk, talk and maybe some fika...</h1>
+
+    <p>I det här spelet ska vi gå på utflykt. Du vet inte vart vi ska men får ledtrådar till olika platser som leder
+            oss rätt. Under utflykten kommer vi också att svara på frågor som leder oss till att lära känna varandra.</p>
+
+    <p><strong>Nästa plats</strong></p>
+    <p><span class="icon">🧭</span><span id="placeHint"></span></p>
+
+    <p><strong>Vår fråga</strong></p>
+    <p id="question"><a href="#" onclick="showNextQuestion()">Klicka för en fråga</a></p>
+    <div><p id="pauseHint"></p></div>
+
+    <button onclick="showNextQuestion()">Nästa fråga</button>
+    <button id="placeButton" onclick="nextPlace()">Jag har hittat platsen</button>
+    <p>📊 Frågor kvar: <span id="counter"></span></p>
+
+    <p>
+        <span class="icon">⚠️</span>
+        <span id="warning">Här visas information om hur vi sköter oss</span>
+    </p>
+
+
+    <div class="info">
+        <p><span class="icon">ℹ️</span><strong>Regler</strong></h2>
+        <ul id="gameRules">
+            <li>⏭️ Vi får hoppa över frågor</li>
+            <li>⏳ Om det tar mindre än <span id="minTimeBetweenQuestions"></span> att svara så räknas frågan som
+                överhoppad</li>
+            <li>🔥 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
+                fråga</li>
+            <li>❓ Vi måste svara på minst <span id="minQuestionsBeforeNextPlace"></span> frågor innan vi får nästa
+                ledtråd</li>
+    </div>
+
+    <div class="toggle">
+    <label>
+      <input type="checkbox" id="intimateMode" onchange="toggleIntimateMode()" />
+      Aktivera intimt läge 😈
+    </label>
+  </div>
+
+</div>
+
+<script>
+
+    const minTimeBetweenQuestions = 60000; // 1 minute
+    const minQuestionsBeforeNextPlace = 3;
+    const maxSkippableQuestions = 3;
+    const noOfSkippableQuestionsLeft = maxSkippableQuestions;
+
+    const placeChallenges = [
+        { hint: "Följ stigen som leder bort från centrum tills du hör porlande vatten...", walkMinutes: 15 },
+        { hint: "Vägen delar sig vid de stora träden – välj vänster och följ skuggan.", walkMinutes: 9 },
+        { hint: "Nästa ledtråd finns där doften av örter hänger i luften...", walkMinutes: 12 }
+    ];
+
+    const questions = [
+        "Vilket träd tycker du bäst om och varför?",
+        "Berätta om en plats från din barndom som du tyckte var magisk.",
+        "Om du fick välja ett fiktivt universum att leva i – vilket skulle det vara och varför?",
+        "Vad betyder 'hem' för dig? Hur känns det att vara trygg?",
+        "Vad har överraskat dig mest idag?",
+        "Vad känns mest minnesvärt från dagen, och vad vill du göra nästa gång?",
+        "Vad skulle du göra om du vann en miljon kronor?",
+        "Vilken årstid gillar du mest och varför?",
+        "Vad är det konstigaste du gillar att äta?",
+        "Vad får dig att känna dig riktigt levande?",
+        "Vad drömmer du om att göra innan du blir gammal?",
+        "Vad var det senaste som fick dig att skratta på riktigt?",
+        "Hur är du när du är förälskad?",
+        "Vad skulle du vilja lära dig om du fick ett år ledigt?",
+        "Vilket är ditt favoritljud?",
+        "Vad tycker du om att göra när du är ensam?",
+        "Har du något hemligt partytrick?",
+        "Hur skulle din perfekta helg se ut?",
+        "Vilken egenskap tycker du är mest attraktiv hos någon?",
+        "Hur visar du att du tycker om någon?",
+        "Vilken färg känns mest som du?",
+        "Om du var ett djur, vilket skulle du vara?",
+        "Vad i livet känner du mest tacksamhet för just nu?",
+        "Vad inspirerar dig?",
+        "Vad skulle du vilja få som komplimang idag?",
+        "Vad tycker du är riktigt romantiskt?",
+        "Vilken låt påminner dig om en fin stund i livet?",
+        "Hur känns det att vara här med mig nu?",
+        "Om du kunde göra om en dag i ditt liv, vilken skulle du välja och varför?",
+        "Vilket minne gör dig alltid glad?"
+    ];
+
+    const personalQuestions = [
+        "Vad är det mest sårbara du har berättat för någon?",
+        "När kände du dig riktigt älskad senast – och varför?",
+        "Vad är en hemlig längtan du sällan pratar om?",
+        "Hur känns det att bli rörd eller berörd på djupet för dig?",
+        "Har du någon fantasi som du inte vågat dela med någon?",
+        "När känner du dig som mest osäker – och hur hanterar du det?",
+        "Hur nära släpper du människor, egentligen?",
+        "Berätta om ett tillfälle då du kände dig riktigt naken – känslomässigt alltså.",
+        "Finns det något du aldrig sagt till någon – men skulle vilja?",
+        "Vad betyder intimitet för dig, bortom det fysiska?"
+    ];
+
+    const intimateQuestions = [
+        "Var på kroppen tycker du mest om att bli kysst?",
+        "Hur visar du med kroppen att du är attraherad?",
+        "Berätta om en gång du kände dig riktigt åtrådd.",
+        "Vilken typ av beröring får dig att rysa på ett skönt sätt?",
+        "Vad tycker du är mest erotiskt – något du gärna berättar?",
+        "Har du någon återkommande sexdröm eller fantasi?",
+        "Hur känner du inför att prata om sex?",
+        "Finns det något du alltid velat testa men inte sagt högt?",
+        "Hur viktigt är fysisk närhet för dig i en relation?",
+        "Vad betyder sex för dig – på riktigt?"
+    ];
+
+    let usedIndexes = [];
+    let placeIndex = 0;
+    let questionCountSinceLastPlace = 0;
+    let skippedCount = 0;
+    let lastShownAt = Date.now();
+
+    const questionElement = document.getElementById("question");
+    const counterElement = document.getElementById("counter");
+    const warningElement = document.getElementById("warning");
+    const placeHintElement = document.getElementById("placeHint");
+    const minTimeBetweenQuestionsElement = document.getElementById("minTimeBetweenQuestions");
+    const maxSkippableQuestionsElement = document.getElementById("maxSkippableQuestions");
+    const minQuestionsBeforeNextPlaceElement = document.getElementById("minQuestionsBeforeNextPlace");
+
+    minTimeBetweenQuestionsElement.innerText = `${minTimeBetweenQuestions / 1000} sekunder`;
+    maxSkippableQuestionsElement.innerText = maxSkippableQuestions;
+    minQuestionsBeforeNextPlaceElement.innerText = minQuestionsBeforeNextPlace;
+
+    function showNextQuestion() {
+        const now = Date.now();
+        const activeList = intimateMode ? intimateQuestions : questions;
+        if (!intimateMode && now - lastShownAt < 60000 && usedIndexes.length > 0) {
+            skippedCount++;
+            const remaining = 3 - skippedCount;
+            warningElement.classList.add("warning");
+            warningElement.innerText = remaining > 0
+                ? `Ge frågorna lite tid! Skippa ${remaining} till så gör vi det personligt 😏`
+                : "Den här frågan är mer personlig – dags att sakta ner och vara närvarande.";
+        } else if (!intimateMode) {
+            warningElement.classList.remove("warning");
+            warningElement.innerText = "Bra! Ni håller er till reglerna 👍";
+        }
+        lastShownAt = now;
+
+        if (usedIndexes.length === activeList.length) {
+        questionElement.innerText = "Inga fler frågor!";
+        counterElement.innerText = 0;
+        return;
+        }
+
+        if (!intimateMode && skippedCount >= 3) {
+        const index = Math.floor(Math.random() * personalQuestions.length);
+        questionElement.innerText = personalQuestions[index];
+        skippedCount = 0;
+        return;
+        }
+
+        let index;
+        do {
+        index = Math.floor(Math.random() * activeList.length);
+        } while (usedIndexes.includes(index));
+        usedIndexes.push(index);
+        questionElement.innerText = activeList[index];
+        counterElement.innerText = `${activeList.length - usedIndexes.length}`;
+        questionCountSinceLastPlace++;
+    }
+
+    function updatePlaceHint() {
+        placeHintElement.innerText = placeIndex < placeChallenges.length
+            ? `${placeChallenges[placeIndex].hint}`
+            : "Ni har nått sista platsen. Bra jobbat!";
+    }
+
+    function nextPlace() {
+        if (questionCountSinceLastPlace >= minQuestionsBeforeNextPlace) {
+            placeIndex++;
+            questionCountSinceLastPlace = 0;
+            updatePlaceHint();
+        } else {
+            warningElement.innerText = "Svara på minst " + minQuestionsBeforeNextPlace + " frågor innan du får nästa ledtråd.";
+        }
+    }
+
+    function resetQuestions() {
+        usedIndexes = [];
+        questionCountSinceLastPlace = 0;
+        skippedCount = 0;
+        questionElement.innerText = "Ny omgång frågor!";
+        counterElement.innerText = `${(intimateMode ? intimateQuestions : questions).length}`;
+    }
+
+    function toggleIntimateMode() {
+        intimateMode = document.getElementById("intimateMode").checked;
+        if (intimateMode) {
+            warningElement.classList.add("warning");
+            warningElement.innerText = "Intimt läge aktiverat! Nu kan det hetta till 🔥";
+        } else {
+            warningElement.innerText = "Intimt läge avaktiverat. Vi håller det lättsamt! 😊";
+        }
+        resetQuestions();
+    }
+
+    intimateMode = false;
+    counterElement.innerHTML = `${questions.length}`;
+    updatePlaceHint();
+
+</script>
+</body>
+
+</html>
