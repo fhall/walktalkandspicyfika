@@ -295,11 +295,14 @@
             warningElement.innerText = "Spelet är låst. Vänta på att det ska låsas upp.";
             toggleIntimateMode(true); // Reset intimate mode when locking the game
         }
+
+        intimateModeElement.disabled = gameLock;
     }
 
     // Setup initial state
     
     counterElement.innerHTML = `${questions.length}`;
+    intimateModeElement.disabled = gameLock;
     updatePlaceHint();
 
 </script>
