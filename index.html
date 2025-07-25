@@ -6,6 +6,7 @@
   <title>Walk, talk, surprise</title>
   <style>
     body { font-family: sans-serif; background: #f3f3f3; padding: 20px; }
+    a { color: #4CAF50; text-decoration: none; }
     .card { background: white; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     .step.active { display: block; }
     button { margin-top: 20px; padding: 10px 20px; font-size: 1em; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
@@ -14,6 +15,7 @@
     .share a { color: #4CAF50; text-decoration: none; }
     .info { margin-top: 20px; font-size: 0.95em; color: #333; }
     .warning { color: #b00020; font-weight: bold; margin-top: 10px; }
+    #lockButton { font-size: 0.8em; border: none; cursor: pointer; }
     #placeHint { margin-top: 20px;}
     #question { font-size: 2em;}
     .icon { display: inline-block; margin-right: 8px; }
@@ -28,16 +30,14 @@
 <body>
 
 <div class="card">
-    <div class="width100">
-        <h1 class="left">Walk, talk, surprise</h1>
-        <button id="lockButton" onclick="toggleGameLock()" class="smallIcon right">🔒</button>
-    </div>
+    <h1>Walk, talk, surprise</h1>
+
 
     <div id="startScreen">
         <p>Ett utflyktsspel för <span id="dateName"></span> och Fredrik.</p>
         <p>I det här spelet ska vi gå på utflykt. Det är bara en av oss som vet vart vi ska men vi får tillsammans ledtrådar till olika platser som leder oss mot målet. Uppgiften är att hitta till rätt slutdestination. Spelet hjälper oss också att lära känna varandra genom att vi ska svara på frågor om oss själva inför den andra.</p>
         <ul>
-            <li>🎯 En av er vet målet – den andra får ledtrådar</li>
+            <li>🎯 En av er vet målet med dejten – den andra ska </li>
             <li>🧠 Ni svarar på frågor om varandra längs vägen</li>
             <li>🔥 Intim-läge kan aktiveras för samtal av annan karaktär 😏</li>
         </ul>
@@ -60,16 +60,18 @@
         
     </div>
 
-    
-
     <div id="mainGame">
-        <p><span id="warning" class="textSmall"><span class="icon">ℹ️</span>Här visas information om hur vi sköter oss</span></p>
-
         <p><strong>Plats</strong></p>
         <p><span class="icon">🧭</span><span id="placeHint"></span></p>
 
         <p><strong>Fråga</strong></p>
-        <p id="question">Här kommer frågorna</p>
+        <p id="question">
+            
+            Spelet är låst<br />
+            <a href="#" id="lockButton" class="textSmall" onclick="toggleGameLock()">🔒 Lås upp</a>
+            
+        </p>
+        <p><span id="warning" class="textSmall"><span class="icon">ℹ️</span>Här visas information om hur vi sköter oss</span></p>
         <p class="textSmall">📊 <span id="counter"></span> frågor kvar</p>
         <div><p id="pauseHint"></p></div>
 
@@ -77,9 +79,10 @@
         <a href="#" onclick="showNextQuestion(true)" class="textSmall">Vi vill inte svara</a>
         
         <br />
-        <button id="placeButton" onclick="nextPlace()">Vi har hittat platsen</button>
-
-        <div class="toggle right">
+        <button id="placeButton" onclick="nextPlace()">Nästa ledtråd</button>
+        <br />
+        <br />
+        <div class="toggle">
             <label>
             <input type="checkbox" id="intimateMode" onchange="toggleIntimateMode()" />
             Aktivera intimt läge 😈🔥
