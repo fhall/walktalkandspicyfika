@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Walk, talk and maybe some fika...</title>
+  <title>Walk, talk, surprise</title>
   <style>
     body { font-family: sans-serif; background: #f3f3f3; padding: 20px; }
     .card { background: white; border-radius: 10px; padding: 20px; max-width: 600px; margin: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -18,25 +18,34 @@
     #placeButton { float: right}
     .icon { display: inline-block; margin-right: 8px; }
     #gameRules { list-style-type: none; padding: 1em; }
+    .textSmall { font-size: 0.8em; color: #555; }
+    .right { float: right;}
+    .left { float: left; }
+    .width100::after { content: ""; display: table; clear: both; }
   </style>
 </head>
 
 <body>
 
 <div class="card">
-    <h1>Walk, talk and maybe some fika...</h1>
-    <p>Hej <span id="dateName"></span> (och Fredrik)</p>
-    <p>I det här spelet ska vi gå på utflykt. Du vet inte vart vi ska men får ledtrådar till olika platser som leder
-            oss rätt. Under utflykten kommer vi också att svara på frågor som leder oss till att lära känna varandra.</p>
+    <div class="width100">
+        <h1 class="left">Walk, talk, surprise</h1>
+        <button id="lockButton" onclick="toggleGameLock()" class="smallIcon right">🔒</button>
+    </div>
+    <div>
+        <p>Ett utflyktsspel för <span id="dateName"></span> och Fredrik.</p>
+        <p>I det här spelet ska vi gå på utflykt. Det är bara en av oss som vet vart vi ska men vi får tillsammans ledtrådar till olika platser som leder oss mot målet. Uppgiften är att hitta till rätt slutdestination. Spelet hjälper oss också att lära känna varandra genom att vi ska svara på frågor om oss själva inför den andra.</p>
+    </div>
 
     <p><strong>Nästa plats</strong></p>
     <p><span class="icon">🧭</span><span id="placeHint"></span></p>
 
     <p><strong>Vår fråga</strong></p>
-    <p id="question"><a href="#" onclick="showNextQuestion()">Klicka för en fråga</a></p>
+    <p id="question">Här kommer frågorna</p>
     <div><p id="pauseHint"></p></div>
 
     <button onclick="showNextQuestion()">Nästa fråga</button>
+    <a href="#" onclick="showNextQuestion(true)" class="textSmall">Vi vill inte svara</a>
     <button id="placeButton" onclick="nextPlace()">Vi har hittat platsen</button>
     <p>📊 Frågor kvar: <span id="counter"></span></p>
 
@@ -52,7 +61,7 @@
             <li>❓ Vi måste svara på minst <span id="minQuestionsBeforeNextPlace"></span> frågor innan vi får nästa
                 ledtråd</li>
             <li>⏭️ Vi får hoppa över frågor</li>
-            <li>🔥 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
+            <li>🔝 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
                 fråga</li>
             <li>⏳ Om det tar mindre än <span id="minTimeBetweenQuestions"></span> att svara så räknas frågan som
                 överhoppad</li>
@@ -62,7 +71,7 @@
     <div class="toggle">
     <label>
       <input type="checkbox" id="intimateMode" onchange="toggleIntimateMode()" />
-      Aktivera intimt läge 😈
+      Aktivera intimt läge 😈🔥
     </label>
   </div>
 
@@ -70,6 +79,8 @@
 
 <script>
 
+    let gameLock = true; // Set to true to prevent the game starting before being unlocked
+    let intimateMode = false; // Start in non-intimate mode
     const dateName = "Frida"
     const minTimeBetweenQuestions = 60000; // 1 minute
     const minQuestionsBeforeNextPlace = 3;
@@ -77,9 +88,15 @@
     const noOfSkippableQuestionsLeft = maxSkippableQuestions;
 
     const placeChallenges = [
-        { hint: "Följ stigen som leder bort från centrum tills du hör porlande vatten...", walkMinutes: 15 },
-        { hint: "Vägen delar sig vid de stora träden – välj vänster och följ skuggan.", walkMinutes: 9 },
-        { hint: "Nästa ledtråd finns där doften av örter hänger i luften...", walkMinutes: 12 }
+        { hint: "Hitta Fredrik! Ledtråd kommer snart ", walkMinutes: 15,
+            personalDetail: ""
+         },
+        { hint: "Vägen delar sig vid de stora träden – välj vänster och följ skuggan.", walkMinutes: 5,
+            personalDetail: ""
+         },
+        { hint: "Nästa ledtråd finns där doften av örter hänger i luften...", walkMinutes: 12,
+            personalDetail: ""
+         }
     ];
 
     const questions = [
@@ -148,6 +165,7 @@
     let lastShownAt = Date.now();
 
     const dateNameElement = document.getElementById("dateName");
+    const gameLockElement = document.getElementById("lockButton");
     const questionElement = document.getElementById("question");
     const counterElement = document.getElementById("counter");
     const warningElement = document.getElementById("warning");
@@ -155,22 +173,37 @@
     const minTimeBetweenQuestionsElement = document.getElementById("minTimeBetweenQuestions");
     const maxSkippableQuestionsElement = document.getElementById("maxSkippableQuestions");
     const minQuestionsBeforeNextPlaceElement = document.getElementById("minQuestionsBeforeNextPlace");
+    const intimateModeElement = document.getElementById("intimateMode");
 
     dateNameElement.innerText = dateName;
     minTimeBetweenQuestionsElement.innerText = `${minTimeBetweenQuestions / 1000} sekunder`;
     maxSkippableQuestionsElement.innerText = maxSkippableQuestions;
     minQuestionsBeforeNextPlaceElement.innerText = minQuestionsBeforeNextPlace;
 
-    function showNextQuestion() {
+    function showNextQuestion(uncomfortableQuestion = false) {
+
+        if (gameLock) {
+            warningElement.innerText = `Spelet är tyvärr låst. Tålamod ${dateName} 😉`;
+                        return;
+        }
+
         const now = Date.now();
         const activeList = intimateMode ? intimateQuestions : questions;
+        
         if (!intimateMode && now - lastShownAt < 60000 && usedIndexes.length > 0) {
-            skippedCount++;
-            const remaining = 3 - skippedCount;
-            warningElement.classList.add("warning");
-            warningElement.innerText = remaining > 0
-                ? `Ge frågorna lite tid! Skippa ${remaining} till så gör vi det personligt 😏`
-                : "Den här frågan är mer personlig – dags att sakta ner och vara närvarande.";
+            if (!uncomfortableQuestion)
+            {
+                skippedCount++;
+            
+                const remaining = 3 - skippedCount;
+                warningElement.classList.add("warning");
+                warningElement.innerText = remaining > 0
+                    ? `Ge frågorna lite tid! Skippa ${remaining} till så gör vi det personligt 😏`
+                    : "Den här frågan är mer personlig – dags att sakta ner och vara närvarande.";
+            } else {
+                warningElement.classList.remove("warning");
+                warningElement.innerText = "Inget tvång! Vi tar nästa fråga utan att räkna denna som överhoppad.";
+            }
         } else if (!intimateMode) {
             warningElement.classList.remove("warning");
             warningElement.innerText = "Bra! Ni håller er till reglerna 👍";
@@ -212,7 +245,7 @@
             questionCountSinceLastPlace = 0;
             updatePlaceHint();
         } else {
-            warningElement.innerText = "Svara på minst " + minQuestionsBeforeNextPlace + " frågor innan du får nästa ledtråd.";
+            warningElement.innerText = `Svara på minst ${minQuestionsBeforeNextPlace} frågor så får ni nästa ledtråd`;
         }
     }
 
@@ -224,7 +257,14 @@
         counterElement.innerText = `${(intimateMode ? intimateQuestions : questions).length}`;
     }
 
-    function toggleIntimateMode() {
+    function toggleIntimateMode(mode) {
+        intimateModeElement.disabled = gameLock
+
+        if (mode !== undefined) {
+            intimateMode = mode;
+        } else {
+            intimateMode = !intimateMode;
+        }
         intimateMode = document.getElementById("intimateMode").checked;
         if (intimateMode) {
             warningElement.classList.add("warning");
@@ -236,7 +276,29 @@
         resetQuestions();
     }
 
-    intimateMode = false;
+    function toggleGameLock() {
+        if (gameLock) {
+            var password = prompt("Enter in the password");
+            if (password !== "hemligt") {
+                warningElement.classList.add("warning");
+                warningElement.innerText = "Fel lösenord!";
+                return;
+            }
+            gameLock = false;
+            gameLockElement.innerText = "🔓";
+            warningElement.classList.remove("warning");
+            warningElement.innerText = "Spelet är nu upplåst! Lycka till!";
+            resetQuestions();
+        } else {
+            gameLock = true;
+            gameLockElement.innerText = "🔒";
+            warningElement.innerText = "Spelet är låst. Vänta på att det ska låsas upp.";
+            toggleIntimateMode(true); // Reset intimate mode when locking the game
+        }
+    }
+
+    // Setup initial state
+    
     counterElement.innerHTML = `${questions.length}`;
     updatePlaceHint();
 
