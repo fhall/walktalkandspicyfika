@@ -25,7 +25,7 @@
 
 <div class="card">
     <h1>Walk, talk and maybe some fika...</h1>
-
+    <p>Hej <span id="dateName"></span> (och Fredrik)</p>
     <p>I det här spelet ska vi gå på utflykt. Du vet inte vart vi ska men får ledtrådar till olika platser som leder
             oss rätt. Under utflykten kommer vi också att svara på frågor som leder oss till att lära känna varandra.</p>
 
@@ -70,6 +70,7 @@
 
 <script>
 
+    const dateName = "Frida"
     const minTimeBetweenQuestions = 60000; // 1 minute
     const minQuestionsBeforeNextPlace = 3;
     const maxSkippableQuestions = 3;
@@ -146,6 +147,7 @@
     let skippedCount = 0;
     let lastShownAt = Date.now();
 
+    const dateNameElement = document.getElementById("dateName");
     const questionElement = document.getElementById("question");
     const counterElement = document.getElementById("counter");
     const warningElement = document.getElementById("warning");
@@ -154,6 +156,7 @@
     const maxSkippableQuestionsElement = document.getElementById("maxSkippableQuestions");
     const minQuestionsBeforeNextPlaceElement = document.getElementById("minQuestionsBeforeNextPlace");
 
+    dateNameElement.innerText = dateName;
     minTimeBetweenQuestionsElement.innerText = `${minTimeBetweenQuestions / 1000} sekunder`;
     maxSkippableQuestionsElement.innerText = maxSkippableQuestions;
     minQuestionsBeforeNextPlaceElement.innerText = minQuestionsBeforeNextPlace;
