@@ -15,9 +15,9 @@
     .info { margin-top: 20px; font-size: 0.95em; color: #333; }
     .warning { color: #b00020; font-weight: bold; margin-top: 10px; }
     #placeHint { margin-top: 20px;}
-    #placeButton { float: right}
+    #question { font-size: 2em;}
     .icon { display: inline-block; margin-right: 8px; }
-    #gameRules { list-style-type: none; padding: 1em; }
+    ul { list-style-type: none; padding: 1em; }
     .textSmall { font-size: 0.8em; color: #555; }
     .right { float: right;}
     .left { float: left; }
@@ -34,46 +34,61 @@
     </div>
     <div>
         <p>Ett utflyktsspel för <span id="dateName"></span> och Fredrik.</p>
+    </div>
+
+    <div id="startScreen">
         <p>I det här spelet ska vi gå på utflykt. Det är bara en av oss som vet vart vi ska men vi får tillsammans ledtrådar till olika platser som leder oss mot målet. Uppgiften är att hitta till rätt slutdestination. Spelet hjälper oss också att lära känna varandra genom att vi ska svara på frågor om oss själva inför den andra.</p>
-    </div>
-
-    <p><strong>Nästa plats</strong></p>
-    <p><span class="icon">🧭</span><span id="placeHint"></span></p>
-
-    <p><strong>Vår fråga</strong></p>
-    <p id="question">Här kommer frågorna</p>
-    <div><p id="pauseHint"></p></div>
-
-    <button onclick="showNextQuestion()">Nästa fråga</button>
-    <a href="#" onclick="showNextQuestion(true)" class="textSmall">Vi vill inte svara</a>
-    <button id="placeButton" onclick="nextPlace()">Vi har hittat platsen</button>
-    <p>📊 Frågor kvar: <span id="counter"></span></p>
-
-    <p>
-        <span class="icon">ℹ️</span>
-        <span id="warning">Här visas information om hur vi sköter oss</span>
-    </p>
-
-
-    <div class="info">
-        <p><span class="icon">⚖️</span><strong>Regler</strong></h2>
-        <ul id="gameRules">
-            <li>❓ Vi måste svara på minst <span id="minQuestionsBeforeNextPlace"></span> frågor innan vi får nästa
-                ledtråd</li>
-            <li>⏭️ Vi får hoppa över frågor</li>
-            <li>🔝 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
-                fråga</li>
-            <li>⏳ Om det tar mindre än <span id="minTimeBetweenQuestions"></span> att svara så räknas frågan som
-                överhoppad</li>
+        <ul>
+            <li>🎯 En av er vet målet – den andra får ledtrådar</li>
+            <li>🧠 Ni svarar på frågor om varandra längs vägen</li>
+            <li>🔥 Intim-läge kan aktiveras för samtal av annan karaktär 😏</li>
         </ul>
+
+        <div class="rules">
+            <p><span class="icon">⚖️</span><strong>Regler</strong></h2>
+            <ul id="gameRules" onclick="toggleGameRules()">
+                <li>❓ Vi måste svara på minst <span id="minQuestionsBeforeNextPlace"></span> frågor innan vi får nästa
+                    ledtråd</li>
+                <li>⏭️ Vi får hoppa över frågor</li>
+                <li>🔝 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
+                    fråga</li>
+                <li>⏳ Om det tar mindre än <span id="minTimeBetweenQuestions"></span> att svara så räknas frågan som
+                    överhoppad</li>
+                
+            </ul>
+        </div>
+
+        <button onclick="startGame()">Starta spelet</button>
+        
     </div>
 
-    <div class="toggle">
-    <label>
-      <input type="checkbox" id="intimateMode" onchange="toggleIntimateMode()" />
-      Aktivera intimt läge 😈🔥
-    </label>
-  </div>
+    
+
+    <div id="mainGame">
+        <p><span id="warning" class="textSmall"><span class="icon">ℹ️</span>Här visas information om hur vi sköter oss</span></p>
+
+        <p><strong>Plats</strong></p>
+        <p><span class="icon">🧭</span><span id="placeHint"></span></p>
+
+        <p><strong>Fråga</strong></p>
+        <p id="question">Här kommer frågorna</p>
+        <p class="textSmall">📊 <span id="counter"></span> frågor kvar</p>
+        <div><p id="pauseHint"></p></div>
+
+        <button onclick="showNextQuestion()">Nästa fråga</button>
+        <a href="#" onclick="showNextQuestion(true)" class="textSmall">Vi vill inte svara</a>
+        
+        <br />
+        <button id="placeButton" onclick="nextPlace()">Vi har hittat platsen</button>
+
+        <div class="toggle right">
+            <label>
+            <input type="checkbox" id="intimateMode" onchange="toggleIntimateMode()" />
+            Aktivera intimt läge 😈🔥
+            </label>
+        </div>
+    </div>
+
 
 </div>
 
@@ -88,7 +103,7 @@
     const noOfSkippableQuestionsLeft = maxSkippableQuestions;
 
     const placeChallenges = [
-        { hint: "Hitta Fredrik! Ledtråd kommer snart ", walkMinutes: 15,
+        { hint: "För att låsa upp spelet måste du hitta Fredrik! Ledtråd kommer...", walkMinutes: 15,
             personalDetail: ""
          },
         { hint: "Vägen delar sig vid de stora träden – välj vänster och följ skuggan.", walkMinutes: 5,
@@ -164,6 +179,9 @@
     let skippedCount = 0;
     let lastShownAt = Date.now();
 
+
+    const startScreenElement = document.getElementById("startScreen"); 
+    const mainGameElement = document.getElementById("mainGame");
     const dateNameElement = document.getElementById("dateName");
     const gameLockElement = document.getElementById("lockButton");
     const questionElement = document.getElementById("question");
@@ -179,6 +197,12 @@
     minTimeBetweenQuestionsElement.innerText = `${minTimeBetweenQuestions / 1000} sekunder`;
     maxSkippableQuestionsElement.innerText = maxSkippableQuestions;
     minQuestionsBeforeNextPlaceElement.innerText = minQuestionsBeforeNextPlace;
+
+    mainGameElement.style.display = "none";
+    function startGame() {
+        startScreenElement.style.display = "none";
+        mainGameElement.style.display = "block";
+    }
 
     function showNextQuestion(uncomfortableQuestion = false) {
 
@@ -258,7 +282,10 @@
     }
 
     function toggleIntimateMode(mode) {
-        intimateModeElement.disabled = gameLock
+        if (gameLock) {
+            intimateModeElement.disabled = gameLock
+            warningElement.innerText = "Spelet är låst. Vänta på att det ska låsas upp 😏";
+        }
 
         if (mode !== undefined) {
             intimateMode = mode;
