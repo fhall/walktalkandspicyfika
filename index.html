@@ -63,6 +63,7 @@
     <div id="mainGame">
         <p><strong>Plats</strong></p>
         <p><span class="icon">🧭</span><span id="placeHint"></span></p>
+        <p><span class="textSmall" id="personalTrivia"></span></p>
 
         <p><strong>Fråga</strong></p>
         <p id="question">
@@ -104,15 +105,21 @@
     const noOfSkippableQuestionsLeft = maxSkippableQuestions;
 
     const placeChallenges = [
-        { hint: "För att låsa upp spelet måste du hitta Fredrik! Ledtråd kommer...", walkMinutes: 15,
-            personalDetail: ""
-         },
-        { hint: "Vägen delar sig vid de stora träden – välj vänster och följ skuggan.", walkMinutes: 5,
-            personalDetail: ""
-         },
-        { hint: "Nästa ledtråd finns där doften av örter hänger i luften...", walkMinutes: 12,
-            personalDetail: ""
-         }
+        { hint: "För att låsa upp spelet måste du hitta Fredrik! Ledtråd kommer...", walkMinutes: 5,
+            personalTrivia: "Fredrik kom med bussen! Visste du att han har jobbat på Skånetrafiken? Fråga honom inte om varför tågen aldrig är i tid dock 😅"
+        },
+        { hint: "Boulebanan", walkMinutes: 5,
+            personalTrivia: ""
+        },
+        { hint: "Scoutstugan", walkMinutes: 1,
+            personalTrivia: ""
+        },
+        { hint: "ICA Supermarket", walkMinutes: 5,
+            personalTrivia: ""
+        },
+        { hint: "Hem till Frida", walkMinutes: 2,
+            personalTrivia: ""
+        }
     ];
 
     const questions = [
@@ -189,6 +196,7 @@
     const counterElement = document.getElementById("counter");
     const warningElement = document.getElementById("warning");
     const placeHintElement = document.getElementById("placeHint");
+    const personalTriviaElement = document.getElementById("personalTrivia");
     const minTimeBetweenQuestionsElement = document.getElementById("minTimeBetweenQuestions");
     const maxSkippableQuestionsElement = document.getElementById("maxSkippableQuestions");
     const minQuestionsBeforeNextPlaceElement = document.getElementById("minQuestionsBeforeNextPlace");
@@ -266,6 +274,7 @@
 
     function nextPlace() {
         if (questionCountSinceLastPlace >= minQuestionsBeforeNextPlace) {
+            personalTriviaElement.innerText = placeChallenges[placeIndex].personalTrivia;
             placeIndex++;
             questionCountSinceLastPlace = 0;
             updatePlaceHint();
