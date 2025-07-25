@@ -1,1 +1,2 @@
-# walktalkandspicyfika
+# Walk, talk and (spicy) fika...
+A game for walking and talking.
