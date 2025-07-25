@@ -37,25 +37,26 @@
     <div><p id="pauseHint"></p></div>
 
     <button onclick="showNextQuestion()">Nästa fråga</button>
-    <button id="placeButton" onclick="nextPlace()">Jag har hittat platsen</button>
+    <button id="placeButton" onclick="nextPlace()">Vi har hittat platsen</button>
     <p>📊 Frågor kvar: <span id="counter"></span></p>
 
     <p>
-        <span class="icon">⚠️</span>
+        <span class="icon">ℹ️</span>
         <span id="warning">Här visas information om hur vi sköter oss</span>
     </p>
 
 
     <div class="info">
-        <p><span class="icon">ℹ️</span><strong>Regler</strong></h2>
+        <p><span class="icon">⚖️</span><strong>Regler</strong></h2>
         <ul id="gameRules">
-            <li>⏭️ Vi får hoppa över frågor</li>
-            <li>⏳ Om det tar mindre än <span id="minTimeBetweenQuestions"></span> att svara så räknas frågan som
-                överhoppad</li>
-            <li>🔥 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
-                fråga</li>
             <li>❓ Vi måste svara på minst <span id="minQuestionsBeforeNextPlace"></span> frågor innan vi får nästa
                 ledtråd</li>
+            <li>⏭️ Vi får hoppa över frågor</li>
+            <li>🔥 Max <span id="maxSkippableQuestions"></span> frågor får hoppas över, annars får vi en mer personlig
+                fråga</li>
+            <li>⏳ Om det tar mindre än <span id="minTimeBetweenQuestions"></span> att svara så räknas frågan som
+                överhoppad</li>
+        </ul>
     </div>
 
     <div class="toggle">
@@ -226,6 +227,7 @@
             warningElement.classList.add("warning");
             warningElement.innerText = "Intimt läge aktiverat! Nu kan det hetta till 🔥";
         } else {
+            warningElement.classList.remove("warning");
             warningElement.innerText = "Intimt läge avaktiverat. Vi håller det lättsamt! 😊";
         }
         resetQuestions();
